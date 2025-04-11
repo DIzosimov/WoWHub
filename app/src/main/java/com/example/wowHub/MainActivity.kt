@@ -32,7 +32,9 @@ class MainActivity : ComponentActivity() {
             applicationContext,
             GuildDatabase::class.java,
             "guild_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration(true) //Wipes out DB on schema change only use in DEV
+            .build()
 
         val warcraftLogsRetrofit = Retrofit.Builder()
             .baseUrl("https://www.warcraftlogs.com/v1/")
