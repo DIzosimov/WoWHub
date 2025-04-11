@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 LaunchedEffect(Unit) {
-                    viewModel.loadWoWAuditRoster("eu", "tarren-mill", "crystal-method")
+                    viewModel.loadWoWAuditRoster()
                 }
                 WoWAuditRosterScreen(viewModel = viewModel)
             }

@@ -29,9 +29,9 @@ fun WoWAuditRosterScreen(viewModel: GuildViewModel) {
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = member.name, style = MaterialTheme.typography.titleMedium)
-                    Text(text = "Class: ${member.className}", style = MaterialTheme.typography.bodyMedium)
-                    Text(text = "Role: ${member.role}", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = member.characterName, style = MaterialTheme.typography.titleMedium)
+                    Text(text = "Class: ${member.characterClass}", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = "Role: ${member.characterRole}", style = MaterialTheme.typography.bodyMedium)
                     Text(text = "Attendance: ${member.attendance ?: 0.0}%", style = MaterialTheme.typography.bodySmall)
                 }
             }

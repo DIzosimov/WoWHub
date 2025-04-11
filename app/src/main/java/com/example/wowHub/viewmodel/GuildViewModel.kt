@@ -1,5 +1,8 @@
 package com.example.wowHub.viewmodel
 
+import com.example.wowHub.BuildConfig
+
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,9 +26,14 @@ class GuildRepository(
         dao.insertReports(reports)
     }
 
-    suspend fun refreshWoWAuditRoster(region: String, realm: String, guild: String) {
-        val auditData = wowAuditApi.getRoster(region, realm, guild)
-        dao.insertWoWAuditMembers(auditData.roster)
+    suspend fun refreshWoWAuditRoster() {
+        try {
+            val authHeader = "Bearer ${BuildConfig.WOWAUDIT_API_KEY}"
+            val roster = wowAuditApi.getRoster(authHeader)
+            dao.insertWoWAuditMembers(roster)
+        } catch (e: Exception) {
+            Log.e("GuildRepository", "Error fetching WoWAudit data", e)
+        }
     }
 
     suspend fun getStoredReports(): List<Report> = dao.getAllReports()
@@ -48,9 +56,9 @@ class GuildViewModel(private val repository: GuildRepository) : ViewModel() {
         }
     }
 
-    fun loadWoWAuditRoster(region: String, realm: String, guild: String) {
+    fun loadWoWAuditRoster() {
         viewModelScope.launch {
-            repository.refreshWoWAuditRoster(region, realm, guild)
+            repository.refreshWoWAuditRoster()
             _auditRoster.value = repository.getStoredWoWAuditMembers()
         }
     }

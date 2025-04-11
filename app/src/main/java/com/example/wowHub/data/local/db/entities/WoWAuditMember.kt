@@ -5,8 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class WoWAuditMember(
-    @PrimaryKey val name: String,
-    val className: String,
-    val role: String,
-    val attendance: Double?
+    @PrimaryKey val id: String, // or use a unique fallback like characterName if no ID
+    val characterName: String,
+    val characterClass: String,
+    val characterRole: String,
+    val attendance: Float?
 )

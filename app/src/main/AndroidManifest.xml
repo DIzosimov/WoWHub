@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Internet access -->
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Optional: for loading local images for image sharing -->
