@@ -12,6 +12,7 @@ import com.example.wowHub.data.local.db.entities.Report
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
 import com.example.wowHub.data.remote.api.WarcraftLogsApi
 import com.example.wowHub.data.remote.api.WoWAuditApi
+import com.example.wowHub.data.remote.models.WoWAuditResponse
 import kotlinx.coroutines.launch
 
 // --- Repository Layer ---
@@ -28,9 +29,33 @@ class GuildRepository(
 
     suspend fun refreshWoWAuditRoster() {
         try {
+            Log.d("GuildRepository", "Attempting to fetch WoWAudit roster...")
             val authHeader = "Bearer ${BuildConfig.WOWAUDIT_API_KEY}"
-            val roster = wowAuditApi.getRoster(authHeader)
-            dao.insertWoWAuditMembers(roster)
+            val response = wowAuditApi.getRoster(authHeader)
+            Log.d("GuildRepository", "Raw API response: $response")
+            
+            val members = response.mapNotNull { response ->
+                try {
+                    Log.d("GuildRepository", "Processing member: id=${response.id}, name=${response.name}, class=${response.wowClass}, role=${response.role}, attendance=${response.attendance}")
+                    WoWAuditMember(
+                        id = response.id ?: "unknown_${System.currentTimeMillis()}",
+                        characterName = response.name ?: "Unknown",
+                        characterClass = response.wowClass ?: "Unknown",
+                        characterRole = response.role ?: "Unknown",
+                        attendance = response.attendance
+                    )
+                } catch (e: Exception) {
+                    Log.e("GuildRepository", "Error creating member from response: $response", e)
+                    null
+                }
+            }
+            
+            if (members.isNotEmpty()) {
+                dao.insertWoWAuditMembers(members)
+                Log.d("GuildRepository", "Inserted ${members.size} members into database")
+            } else {
+                Log.w("GuildRepository", "No valid members to insert into database")
+            }
         } catch (e: Exception) {
             Log.e("GuildRepository", "Error fetching WoWAudit data", e)
         }
@@ -58,8 +83,11 @@ class GuildViewModel(private val repository: GuildRepository) : ViewModel() {
 
     fun loadWoWAuditRoster() {
         viewModelScope.launch {
+            Log.d("GuildViewModel", "Loading WoWAudit roster...")
             repository.refreshWoWAuditRoster()
-            _auditRoster.value = repository.getStoredWoWAuditMembers()
+            val members = repository.getStoredWoWAuditMembers()
+            Log.d("GuildViewModel", "Retrieved ${members.size} members from database")
+            _auditRoster.value = members
         }
     }
 }

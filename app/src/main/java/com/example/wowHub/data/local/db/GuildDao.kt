@@ -39,5 +39,5 @@ interface GuildDao {
     suspend fun getAllWoWAuditMembers(): List<WoWAuditMember>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertWoWAuditMembers(members: List<WoWAuditMember>)
+    suspend fun insertWoWAuditMembers(members: kotlin.collections.List<com.example.wowHub.data.local.db.entities.WoWAuditMember>)
 }

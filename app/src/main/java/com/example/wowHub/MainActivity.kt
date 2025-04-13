@@ -1,5 +1,6 @@
 package com.example.wowHub
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,15 +26,17 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         val db = Room.databaseBuilder(
             applicationContext,
             GuildDatabase::class.java,
             "guild_database"
         )
-            .fallbackToDestructiveMigration(true) //Wipes out DB on schema change only use in DEV
+            .fallbackToDestructiveMigration() //Wipes out DB on schema change only use in DEV
             .build()
 
         val warcraftLogsRetrofit = Retrofit.Builder()
@@ -58,11 +61,15 @@ class MainActivity : ComponentActivity() {
         val viewModel = GuildViewModel(repository)
 
         setContent {
-            MaterialTheme {
-                LaunchedEffect(Unit) {
-                    viewModel.loadWoWAuditRoster()
+            WowHubTheme {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    LaunchedEffect(Unit) {
+                        viewModel.loadWoWAuditRoster()
+                    }
+                    WoWAuditRosterScreen(viewModel = viewModel)
                 }
-                WoWAuditRosterScreen(viewModel = viewModel)
             }
         }
     }
