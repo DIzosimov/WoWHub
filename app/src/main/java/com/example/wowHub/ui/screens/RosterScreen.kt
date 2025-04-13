@@ -1,15 +1,13 @@
 package com.example.wowHub.ui.screens
 
 import com.example.wowHub.viewmodel.GuildViewModel
-import com.example.wowHub.utils.ClassColors
 import com.example.wowHub.utils.RoleCategories
 import com.example.wowHub.utils.RoleCategory
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -19,10 +17,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.wowHub.R
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
 
 @Composable
@@ -44,7 +42,7 @@ fun WoWAuditRosterScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Iterate through each role category
-        RoleCategory.values().forEach { category ->
+        RoleCategory.entries.forEach { category ->
             val membersInCategory = groupedMembers[category] ?: emptyList()
             if (membersInCategory.isNotEmpty()) {
                 item {
@@ -119,15 +117,17 @@ private fun RoleCategorySection(
 }
 
 @Composable
-private fun MemberCard(member: WoWAuditMember) {
-    val classColor = ClassColors.getClassColor(member.characterClass)
-    
+private fun MemberCard(
+    member: WoWAuditMember,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(2.dp),
-        shape = RoundedCornerShape(8.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
@@ -135,37 +135,45 @@ private fun MemberCard(member: WoWAuditMember) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Class color indicator
-            Box(
+            // Class icon
+            val classIcon = when (member.characterClass.lowercase()) {
+                "death knight" -> R.drawable.class_death_knight
+                "demon hunter" -> R.drawable.class_demonhunter
+                "druid" -> R.drawable.class_druid
+                "evoker" -> R.drawable.class_evoker
+                "hunter" -> R.drawable.class_hunter
+                "mage" -> R.drawable.class_mage
+                "monk" -> R.drawable.class_monk
+                "paladin" -> R.drawable.class_paladin
+                "priest" -> R.drawable.class_priest
+                "rogue" -> R.drawable.class_rogue
+                "shaman" -> R.drawable.class_shaman
+                "warlock" -> R.drawable.class_warlock
+                "warrior" -> R.drawable.class_warrior
+                else -> R.drawable.class_warrior // Default icon
+            }
+            
+            Image(
+                painter = painterResource(id = classIcon),
+                contentDescription = "${member.characterClass} icon",
                 modifier = Modifier
-                    .size(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(classColor)
+                    .size(32.dp)
+                    .padding(end = 8.dp)
             )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column {
+
+            // Character name and attendance
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = member.characterName,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = classColor
-                    )
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
                 Text(
-                    text = member.characterClass,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                Text(
-                    text = "Attendance: ${member.attendance?.let { "%.1f%%".format(it) } ?: "N/A"}",
-                    style = MaterialTheme.typography.bodySmall
+                    text = "Attendance: ${member.attendance}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
         }
