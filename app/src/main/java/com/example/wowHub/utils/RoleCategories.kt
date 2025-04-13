@@ -8,28 +8,12 @@ enum class RoleCategory {
 
 object RoleCategories {
     fun getRoleCategory(member: WoWAuditMember): RoleCategory {
-        val role = member.characterRole.lowercase()
-        val wowClass = member.characterClass.lowercase()
-
-        return when {
-            role == "tank" -> RoleCategory.TANK
-            role == "healer" || isHealerClass(wowClass) -> RoleCategory.HEALER
-            isRangedDpsClass(wowClass) -> RoleCategory.RANGED_DPS
-            else -> RoleCategory.MELEE_DPS
-        }
-    }
-
-    private fun isHealerClass(wowClass: String): Boolean {
-        return when (wowClass) {
-            "priest", "paladin", "shaman", "druid", "monk" -> true
-            else -> false
-        }
-    }
-
-    private fun isRangedDpsClass(wowClass: String): Boolean {
-        return when (wowClass) {
-            "mage", "warlock", "hunter", "evoker" -> true
-            else -> false
+        return when (member.characterRole.lowercase()) {
+            "tank" -> RoleCategory.TANK
+            "heal" -> RoleCategory.HEALER
+            "ranged" -> RoleCategory.RANGED_DPS
+            "melee" -> RoleCategory.MELEE_DPS
+            else -> RoleCategory.MELEE_DPS // Default to melee DPS if role is unknown
         }
     }
 

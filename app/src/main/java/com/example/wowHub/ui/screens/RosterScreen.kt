@@ -4,9 +4,12 @@ import com.example.wowHub.viewmodel.GuildViewModel
 import com.example.wowHub.utils.ClassColors
 import com.example.wowHub.utils.RoleCategories
 import com.example.wowHub.utils.RoleCategory
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -17,6 +20,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
@@ -40,7 +44,7 @@ fun WoWAuditRosterScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Iterate through each role category
-        RoleCategory.entries.forEach { category ->
+        RoleCategory.values().forEach { category ->
             val membersInCategory = groupedMembers[category] ?: emptyList()
             if (membersInCategory.isNotEmpty()) {
                 item {
@@ -54,6 +58,7 @@ fun WoWAuditRosterScreen(
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun RoleCategorySection(
     category: RoleCategory,
@@ -89,10 +94,24 @@ private fun RoleCategorySection(
                 }
             }
             
-            // Member list
-            if (expanded) {
-                members.forEach { member ->
-                    MemberCard(member = member)
+            // Animated member list
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(
+                    animationSpec = tween(300)
+                ) + fadeIn(
+                    animationSpec = tween(300)
+                ),
+                exit = shrinkVertically(
+                    animationSpec = tween(300)
+                ) + fadeOut(
+                    animationSpec = tween(300)
+                )
+            ) {
+                Column {
+                    members.forEach { member ->
+                        MemberCard(member = member)
+                    }
                 }
             }
         }
