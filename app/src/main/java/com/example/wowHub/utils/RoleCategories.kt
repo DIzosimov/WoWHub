@@ -8,11 +8,28 @@ enum class RoleCategory {
 
 object RoleCategories {
     fun getRoleCategory(member: WoWAuditMember): RoleCategory {
-        return when (member.characterRole.lowercase()) {
-            "tank" -> RoleCategory.TANK
-            "healer" -> RoleCategory.HEALER
-            in listOf("mage", "warlock", "priest", "shaman", "druid", "hunter", "evoker") -> RoleCategory.RANGED_DPS
+        val role = member.characterRole.lowercase()
+        val wowClass = member.characterClass.lowercase()
+
+        return when {
+            role == "tank" -> RoleCategory.TANK
+            role == "healer" || isHealerClass(wowClass) -> RoleCategory.HEALER
+            isRangedDpsClass(wowClass) -> RoleCategory.RANGED_DPS
             else -> RoleCategory.MELEE_DPS
+        }
+    }
+
+    private fun isHealerClass(wowClass: String): Boolean {
+        return when (wowClass) {
+            "priest", "paladin", "shaman", "druid", "monk" -> true
+            else -> false
+        }
+    }
+
+    private fun isRangedDpsClass(wowClass: String): Boolean {
+        return when (wowClass) {
+            "mage", "warlock", "hunter", "evoker" -> true
+            else -> false
         }
     }
 

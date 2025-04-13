@@ -7,7 +7,6 @@ import com.example.wowHub.utils.RoleCategory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -18,7 +17,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
@@ -42,7 +40,7 @@ fun WoWAuditRosterScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Iterate through each role category
-        RoleCategory.values().forEach { category ->
+        RoleCategory.entries.forEach { category ->
             val membersInCategory = groupedMembers[category] ?: emptyList()
             if (membersInCategory.isNotEmpty()) {
                 item {
