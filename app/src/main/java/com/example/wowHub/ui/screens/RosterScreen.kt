@@ -78,12 +78,32 @@ private fun RoleCategorySection(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = RoleCategories.getRoleDisplayName(category),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Role icon
+                    val roleIcon = when (category) {
+                        RoleCategory.TANK -> R.drawable.role_tank
+                        RoleCategory.HEALER -> R.drawable.role_healer
+                        RoleCategory.MELEE_DPS -> R.drawable.role_melee
+                        RoleCategory.RANGED_DPS -> R.drawable.rdps
+                    }
+                    
+                    Image(
+                        painter = painterResource(id = roleIcon),
+                        contentDescription = "${category.name} role icon",
+                        modifier = Modifier.size(24.dp)
                     )
-                )
+                    
+                    Text(
+                        text = RoleCategories.getRoleDisplayName(category),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+                
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
