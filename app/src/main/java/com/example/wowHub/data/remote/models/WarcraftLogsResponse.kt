@@ -15,17 +15,13 @@ data class ReportContainer(
 )
 
 data class ReportList(
-    val data: List<Report>
+    val data: List<Report>,
+    val nextPageTimestamp: Long?
 )
 
 data class Report(
     val code: String,
     val title: String,
     val startTime: Long,
-    val endTime: Long,
-    val zone: Zone
-)
-
-data class Zone(
-    val name: String
+    val endTime: Long
 )

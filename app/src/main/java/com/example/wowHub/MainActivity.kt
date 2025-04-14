@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
 import com.example.wowHub.data.local.db.GuildDatabase
-import com.example.wowHub.data.remote.api.WarcraftLogsApi
+import com.example.wowHub.data.local.db.entities.GuildMember
 import com.example.wowHub.data.remote.api.WarcraftLogsGraphQLApi
 import com.example.wowHub.data.remote.api.WoWAuditApi
 import com.example.wowHub.ui.screens.WoWAuditRosterScreen
@@ -42,11 +42,6 @@ class MainActivity : ComponentActivity() {
             "guild_database"
         )
             .fallbackToDestructiveMigration() //Wipes out DB on schema change only use in DEV
-            .build()
-
-        val warcraftLogsRetrofit = Retrofit.Builder()
-            .baseUrl("https://www.warcraftlogs.com/v1/")
-            .addConverterFactory(GsonConverterFactory.create())
             .build()
 
         val wowAuditRetrofit = Retrofit.Builder()
@@ -72,7 +67,6 @@ class MainActivity : ComponentActivity() {
             clientSecret = BuildConfig.WARCRAFTLOGS_SECRET_KEY
         )
 
-        val warcraftLogsApi = warcraftLogsRetrofit.create(WarcraftLogsApi::class.java)
         val wowAuditApi = wowAuditRetrofit.create(WoWAuditApi::class.java)
 
         val repository = GuildRepository(
@@ -92,6 +86,7 @@ class MainActivity : ComponentActivity() {
                         viewModel.loadWoWAuditRoster()
                         val token = tokenManager.getValidToken()
                         viewModel.loadReports(token)
+                        viewModel.loadGuildMembers(token)
                     }
 
                     Column(modifier = Modifier.padding(16.dp)) {

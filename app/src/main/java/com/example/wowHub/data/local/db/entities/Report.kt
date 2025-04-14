@@ -8,6 +8,5 @@ data class Report(
     @PrimaryKey val code: String,
     val title: String,
     val startTime: Long,
-    val endTime: Long,
-    val zoneName: String
+    val endTime: Long
 )

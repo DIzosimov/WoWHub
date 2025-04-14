@@ -40,4 +40,6 @@ interface GuildDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWoWAuditMembers(members: List<WoWAuditMember>)
+
+
 }
