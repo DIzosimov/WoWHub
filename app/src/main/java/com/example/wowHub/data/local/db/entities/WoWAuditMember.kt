@@ -9,5 +9,6 @@ data class WoWAuditMember(
     val characterName: String,
     val characterClass: String,
     val characterRole: String,
-    val attendance: Float?
+    val attendance: Float?,
+    val realm: String
 )

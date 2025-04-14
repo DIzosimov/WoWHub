@@ -89,13 +89,14 @@ class GuildRepository(
 
             val members = response.mapNotNull { response ->
                 try {
-                    Log.d("GuildRepository", "Processing member: id=${response.id}, name=${response.name}, class=${response.wowClass}, role=${response.role}, attendance=${response.attendance}")
+                    Log.d("GuildRepository", "Processing member: id=${response.id}, name=${response.name}, class=${response.wowClass}, role=${response.role}, attendance=${response.attendance}, realm=${response.realm}")
                     WoWAuditMember(
                         id = response.id ?: "unknown_${System.currentTimeMillis()}",
                         characterName = response.name ?: "Unknown",
                         characterClass = response.wowClass ?: "Unknown",
                         characterRole = response.role ?: "Unknown",
-                        attendance = response.attendance
+                        attendance = response.attendance,
+                        realm = response.realm ?: "Unknown"
                     )
                 } catch (e: Exception) {
                     Log.e("GuildRepository", "Error creating member from response: $response", e)
@@ -126,13 +127,12 @@ class GuildRepository(
             val query = """
             {
               characterData {
-                character(name: "${member.characterName}", serverSlug: "tarren-mill", serverRegion: "EU") {
+                character(name: "${member.characterName}", serverSlug: "${member.realm}", serverRegion: "EU") {
                   id
                   canonicalID
                   name
                   classID
                   level
-                  faction
                   guildRank
                   server {
                     name

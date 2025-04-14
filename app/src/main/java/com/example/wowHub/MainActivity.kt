@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
             GuildDatabase::class.java,
             "guild_database"
         )
-            .fallbackToDestructiveMigration() //Wipes out DB on schema change only use in DEV
+            .fallbackToDestructiveMigration(true) //Wipes out DB on schema change only use in DEV
             .build()
 
         val wowAuditRetrofit = Retrofit.Builder()

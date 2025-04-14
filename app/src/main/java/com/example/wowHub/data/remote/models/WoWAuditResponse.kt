@@ -16,5 +16,8 @@ data class WoWAuditResponse(
     val role: String? = null,
     
     @SerializedName("attendance")
-    val attendance: Float? = null
-) 
+    val attendance: Float? = null,
+
+    @SerializedName("realm")
+    val realm: String? = null,
+)
