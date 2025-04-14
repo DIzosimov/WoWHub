@@ -1,6 +1,5 @@
 package com.example.wowHub.ui.screens
 
-import com.example.wowHub.viewmodel.GuildViewModel
 import com.example.wowHub.utils.RoleCategories
 import com.example.wowHub.utils.RoleCategory
 import androidx.compose.animation.*
@@ -22,10 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.wowHub.R
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
+import com.example.wowHub.viewmodel.GuildRepository
 
 @Composable
 fun WoWAuditRosterScreen(
-    viewModel: GuildViewModel,
+    viewModel: GuildRepository.GuildViewModel,
     modifier: Modifier = Modifier
 ) {
     val roster by viewModel.auditRoster.observeAsState(emptyList())

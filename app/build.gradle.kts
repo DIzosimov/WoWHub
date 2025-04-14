@@ -12,6 +12,8 @@ val localProperties = Properties().apply {
     load(FileInputStream(rootProject.file("local.properties")))
 }
 val wowauditApiKey = localProperties["wowaudit_api_key"] as String
+val warcraftLogsClientKey = localProperties["WARCRAFTLOGS_CLIENT_ID"] as String
+val warcraftLogsClientSecret = localProperties["WARCRAFTLOGS_CLIENT_SECRET"] as String
 
 
 android {
@@ -28,6 +30,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "WOWAUDIT_API_KEY", "\"$wowauditApiKey\"")
+        buildConfigField("String", "WARCRAFTLOGS_CLIENT_KEY", "\"$warcraftLogsClientKey\"")
+        buildConfigField("String", "WARCRAFTLOGS_SECRET_KEY", "\"$warcraftLogsClientSecret\"")
+
     }
 
     buildTypes {
@@ -63,6 +68,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

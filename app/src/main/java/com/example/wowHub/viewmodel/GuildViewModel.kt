@@ -10,22 +10,71 @@ import androidx.lifecycle.viewModelScope
 import com.example.wowHub.data.local.db.GuildDao
 import com.example.wowHub.data.local.db.entities.Report
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
+import com.example.wowHub.data.remote.GraphQL.GraphQLRequest
 import com.example.wowHub.data.remote.api.WarcraftLogsApi
+import com.example.wowHub.data.remote.api.WarcraftLogsGraphQLApi
 import com.example.wowHub.data.remote.api.WoWAuditApi
-import com.example.wowHub.data.remote.models.WoWAuditResponse
 import kotlinx.coroutines.launch
 
 // --- Repository Layer ---
 
 class GuildRepository(
     private val dao: GuildDao,
-    private val warcraftLogsApi: WarcraftLogsApi,
-    private val wowAuditApi: WoWAuditApi
+    private val wowAuditApi: WoWAuditApi,
+    private val warcraftLogsGraphQLApi: WarcraftLogsGraphQLApi
+
 ) {
-    suspend fun refreshReports(guild: String, server: String, region: String, apiKey: String) {
-        val reports = warcraftLogsApi.getReports(guild, server, region, apiKey)
-        dao.insertReports(reports)
+    suspend fun refreshReports(authToken: String) {
+        try {
+            val query = """
+{
+  reportData {
+    reports(
+      guildName: "Crystal Method",
+      guildServerSlug: "tarren-mill",
+      guildServerRegion: "EU",
+      limit: 10,
+      endTime: System.currentTimeMillis()
+    ) {
+      data {
+        code
+        title
+        startTime
+        endTime
+        zone {
+          name
+        }
+      }
+      nextPageTimestamp
     }
+  }
+}
+""".trimIndent()
+
+
+            val response = warcraftLogsGraphQLApi.getReports(
+                auth = "Bearer $authToken",
+                body = GraphQLRequest(query)
+            )
+
+            Log.d("WarcraftLogs", "Full response: $response")
+
+            val reportEntities = response.data.reportData.reports.data.map {
+                Report(
+                    code = it.code,
+                    title = it.title,
+                    startTime = it.startTime,
+                    endTime = it.endTime,
+                    zoneName = it.zoneName
+                )
+            }
+
+            dao.insertReports(reportEntities)
+        } catch (e: Exception) {
+            Log.e("GuildRepository", "Error fetching reports from Warcraft Logs V2 API", e)
+        }
+    }
+
 
     suspend fun refreshWoWAuditRoster() {
         try {
@@ -33,7 +82,7 @@ class GuildRepository(
             val authHeader = "Bearer ${BuildConfig.WOWAUDIT_API_KEY}"
             val response = wowAuditApi.getRoster(authHeader)
             Log.d("GuildRepository", "Raw API response: $response")
-            
+
             val members = response.mapNotNull { response ->
                 try {
                     Log.d("GuildRepository", "Processing member: id=${response.id}, name=${response.name}, class=${response.wowClass}, role=${response.role}, attendance=${response.attendance}")
@@ -49,7 +98,7 @@ class GuildRepository(
                     null
                 }
             }
-            
+
             if (members.isNotEmpty()) {
                 dao.insertWoWAuditMembers(members)
                 Log.d("GuildRepository", "Inserted ${members.size} members into database")
@@ -63,31 +112,70 @@ class GuildRepository(
 
     suspend fun getStoredReports(): List<Report> = dao.getAllReports()
     suspend fun getStoredWoWAuditMembers(): List<WoWAuditMember> = dao.getAllWoWAuditMembers()
-}
 
-// --- ViewModel Layer ---
-
-class GuildViewModel(private val repository: GuildRepository) : ViewModel() {
-    private val _reports = MutableLiveData<List<Report>>()
-    val reports: LiveData<List<Report>> get() = _reports
-
-    private val _auditRoster = MutableLiveData<List<WoWAuditMember>>()
-    val auditRoster: LiveData<List<WoWAuditMember>> get() = _auditRoster
-
-    fun loadReports(guild: String, server: String, region: String, apiKey: String) {
-        viewModelScope.launch {
-            repository.refreshReports(guild, server, region, apiKey)
-            _reports.value = repository.getStoredReports()
+    suspend fun fetchWarcraftLogsReports(authToken: String): List<Report> {
+        val query = """
+{
+  reportData {
+    guild(name: "Crystal-Method", serverSlug: "tarren-mill", serverRegion: "EU") {
+      reports(limit: 5) {
+        data {
+          code
+          title
+          startTime
+          endTime
+          visibility
+          zone {
+            name
+          }
+          fights {
+            id
+            name
+            startTime
+            endTime
+            kill
+            difficulty
+          }
         }
+      }
+    }
+  }
+}
+""".trimIndent()
+
+
+        val response = warcraftLogsGraphQLApi.getReports(
+            auth = "Bearer $authToken",
+            body = GraphQLRequest(query)
+        )
+
+        return response.data.reportData.reports.data
     }
 
-    fun loadWoWAuditRoster() {
-        viewModelScope.launch {
-            Log.d("GuildViewModel", "Loading WoWAudit roster...")
-            repository.refreshWoWAuditRoster()
-            val members = repository.getStoredWoWAuditMembers()
-            Log.d("GuildViewModel", "Retrieved ${members.size} members from database")
-            _auditRoster.value = members
+    // --- ViewModel Layer ---
+
+    class GuildViewModel(private val repository: GuildRepository) : ViewModel() {
+        private val _reports = MutableLiveData<List<Report>>()
+        val reports: LiveData<List<Report>> get() = _reports
+
+        private val _auditRoster = MutableLiveData<List<WoWAuditMember>>()
+        val auditRoster: LiveData<List<WoWAuditMember>> get() = _auditRoster
+
+        fun loadReports(authToken: String) {
+            viewModelScope.launch {
+                repository.refreshReports(authToken)
+                _reports.value = repository.getStoredReports()
+            }
+        }
+
+        fun loadWoWAuditRoster() {
+            viewModelScope.launch {
+                Log.d("GuildViewModel", "Loading WoWAudit roster...")
+                repository.refreshWoWAuditRoster()
+                val members = repository.getStoredWoWAuditMembers()
+                Log.d("GuildViewModel", "Retrieved ${members.size} members from database")
+                _auditRoster.value = members
+            }
         }
     }
 }

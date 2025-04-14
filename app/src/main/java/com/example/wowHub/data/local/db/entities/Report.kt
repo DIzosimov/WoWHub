@@ -5,9 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Report(
-    @PrimaryKey val id: String,
+    @PrimaryKey val code: String,
     val title: String,
-    val owner: String,
-    val start: Long,
-    val end: Long
+    val startTime: Long,
+    val endTime: Long,
+    val zoneName: String
 )
