@@ -143,7 +143,7 @@ fun ZoneRankingCard(member: GuildMember) {
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                         Text(
-                            text = "${it.bestPerformanceAverage ?: "0.0"}%",
+                            text = it.bestPerformanceAverage?.toDoubleOrNull()?.let { avg -> String.format("%.2f", avg) } ?: "0.00",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -154,7 +154,7 @@ fun ZoneRankingCard(member: GuildMember) {
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                         Text(
-                            text = "${it.medianPerformanceAverage ?: "0.0"}%",
+                            text = it.medianPerformanceAverage?.toDoubleOrNull()?.let { avg -> String.format("%.2f", avg) } ?: "0.00",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -181,7 +181,7 @@ fun ZoneRankingCard(member: GuildMember) {
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = "${allStar.points ?: "0.0"}/${allStar.possiblePoints ?: "0"}",
+                                text = "${allStar.points?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "0.00"}/${allStar.possiblePoints?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "0.00"}",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -237,7 +237,7 @@ fun ZoneRankingCard(member: GuildMember) {
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
                                     Text(
-                                        text = "${ranking.rankPercent ?: "0.0"}%",
+                                        text = "${ranking.rankPercent?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "0.00"}%",
                                         style = MaterialTheme.typography.bodyLarge
                                     )
                                 }
@@ -259,7 +259,7 @@ fun ZoneRankingCard(member: GuildMember) {
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
                                     Text(
-                                        text = ranking.bestAmount ?: "0.0",
+                                        text = ranking.bestAmount?.toDoubleOrNull()?.let { String.format("%,.0f", it) } ?: "0",
                                         style = MaterialTheme.typography.bodyLarge
                                     )
                                 }

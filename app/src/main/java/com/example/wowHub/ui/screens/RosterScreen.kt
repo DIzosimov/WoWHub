@@ -141,7 +141,7 @@ private fun MemberCard(
     modifier: Modifier = Modifier
 ) {
     val bestAvg = guildMember?.getZoneRankings()?.bestPerformanceAverage
-    val bestAvgText = bestAvg?.toDouble()?.toString() ?: "-"
+    val bestAvgText = bestAvg?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "-"
     Card(
         modifier = modifier
             .fillMaxWidth()
