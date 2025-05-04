@@ -11,7 +11,6 @@ import com.example.wowHub.data.local.db.GuildDao
 import com.example.wowHub.data.local.db.entities.GuildMember
 import com.example.wowHub.data.local.db.entities.Report
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
-import com.example.wowHub.data.local.db.entities.ZoneRankings
 import com.example.wowHub.data.remote.GraphQL.GraphQLRequest
 import com.example.wowHub.data.remote.api.WarcraftLogsGraphQLApi
 import com.example.wowHub.data.remote.api.WoWAuditApi
@@ -92,7 +91,7 @@ class GuildRepository(
 
             val members = response.mapNotNull { response ->
                 try {
-                    Log.d("GuildRepository", "Processing member: id=${response.id}, name=${response.name}, class=${response.wowClass}, role=${response.role}, attendance=${response.attendance}, realm=${response.realm}")
+                    //Log.d("GuildRepository", "Processing member: id=${response.id}, name=${response.name}, class=${response.wowClass}, role=${response.role}, attendance=${response.attendance}, realm=${response.realm}")
                     WoWAuditMember(
                         id = response.id ?: "unknown_${System.currentTimeMillis()}",
                         characterName = response.name ?: "Unknown",
@@ -127,28 +126,10 @@ class GuildRepository(
         val guildMembers = mutableListOf<GuildMember>()
 
         for (member in members) {
-            /*val query = """
-            {
-              characterData {
-                character(name: "${member.characterName}", serverSlug: "${member.realm}", serverRegion: "EU") {
-                  id
-                  canonicalID
-                  name
-                  classID
-                  level
-                  guildRank
-                  server {
-                    name
-                    slug
-                  }
-                }
-              }
-            }
-        """.trimIndent()*/
             val query = """
                 {
                   characterData {
-                    character(name: "${member.characterName}", serverSlug: "${member.realm}", serverRegion: "EU") {
+                    character(name: "${member.characterName}", serverSlug: "${member.realm.lowercase().replace(" ", "-")}", serverRegion: "EU") {
                       id
                       canonicalID
                       name
@@ -175,7 +156,7 @@ class GuildRepository(
                 }
             """.trimIndent()
 
-            //Log.e("CharacterSync", "Query for ${member.characterName}:\n$query")
+            Log.e("CharacterSync", "Query for ${member.characterName}:\n$query")
 
             try {
                 val response = warcraftLogsGraphQLApi.getCharacter(
