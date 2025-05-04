@@ -11,11 +11,12 @@ import com.example.wowHub.data.local.db.GuildDao
 import com.example.wowHub.data.local.db.entities.GuildMember
 import com.example.wowHub.data.local.db.entities.Report
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
+import com.example.wowHub.data.local.db.entities.ZoneRankings
 import com.example.wowHub.data.remote.GraphQL.GraphQLRequest
-import com.example.wowHub.data.remote.api.WarcraftLogsApi
 import com.example.wowHub.data.remote.api.WarcraftLogsGraphQLApi
 import com.example.wowHub.data.remote.api.WoWAuditApi
 import com.example.wowHub.data.remote.models.CharacterDetails
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 // --- Repository Layer ---
@@ -27,7 +28,6 @@ class GuildRepository(
 
 ) {
     suspend fun refreshReports(authToken: String) {
-        val endTime = System.currentTimeMillis()
         try {
             val query = """
 {
@@ -66,6 +66,8 @@ class GuildRepository(
         }
     }
 
+
+
     private fun mapCharacterToGuildMember(existingId: String, character: CharacterDetails): GuildMember {
         return GuildMember(
             id = existingId,
@@ -75,7 +77,8 @@ class GuildRepository(
             faction = character.faction,
             guildRank = character.guildRank,
             serverName = character.server.name,
-            serverSlug = character.server.slug
+            serverSlug = character.server.slug,
+            zoneRankingsJson = Gson().toJson(character.zoneRankings)
         )
     }
 
@@ -124,7 +127,7 @@ class GuildRepository(
         val guildMembers = mutableListOf<GuildMember>()
 
         for (member in members) {
-            val query = """
+            /*val query = """
             {
               characterData {
                 character(name: "${member.characterName}", serverSlug: "${member.realm}", serverRegion: "EU") {
@@ -141,7 +144,38 @@ class GuildRepository(
                 }
               }
             }
-        """.trimIndent()
+        """.trimIndent()*/
+            val query = """
+                {
+                  characterData {
+                    character(name: "${member.characterName}", serverSlug: "${member.realm}", serverRegion: "EU") {
+                      id
+                      canonicalID
+                      name
+                      classID
+                      level
+                      guildRank
+                      hidden
+                      server {
+                        name
+                        slug
+                      }
+                      guilds {
+                        id
+                        name
+                        server {
+                          name
+                          slug
+                        }
+                      }
+                      gameData
+                      zoneRankings(zoneID: 42, metric: dps, difficulty: 5)
+                    }
+                  }
+                }
+            """.trimIndent()
+
+            //Log.e("CharacterSync", "Query for ${member.characterName}:\n$query")
 
             try {
                 val response = warcraftLogsGraphQLApi.getCharacter(
@@ -205,7 +239,6 @@ class GuildRepository(
                     .reportData
                     .reports
                     .data
-                    ?: emptyList()
 
                 allReports.addAll(
                     reports.map {
@@ -242,6 +275,7 @@ class GuildRepository(
 
         private val _guildRoster = MutableLiveData<List<GuildMember>>()
         val guildRoster: LiveData<List<GuildMember>> get() = _guildRoster
+
 
         fun loadReports(authToken: String) {
             viewModelScope.launch {

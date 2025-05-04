@@ -1,5 +1,7 @@
 package com.example.wowHub.data.remote.models
 
+import com.example.wowHub.data.local.db.entities.ZoneRankings
+
 data class WarcraftCharacterResponse(
     val data: CharacterDataWrapper?
 )
@@ -20,7 +22,8 @@ data class CharacterDetails(
     val level: Int,
     val faction: String,
     val guildRank: Int,
-    val server: CharacterServer
+    val server: CharacterServer,
+    val zoneRankings: ZoneRankings
 )
 
 data class CharacterServer(
