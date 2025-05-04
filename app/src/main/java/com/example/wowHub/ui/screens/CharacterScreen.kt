@@ -1,0 +1,273 @@
+package com.example.wowHub.ui.screens
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.wowHub.R
+import com.example.wowHub.data.local.db.entities.GuildMember
+import com.example.wowHub.viewmodel.GuildRepository
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CharacterScreen(
+    characterName: String,
+    viewModel: GuildRepository.GuildViewModel,
+    onNavigateBack: () -> Unit
+) {
+    val guildMembers by viewModel.guildRoster.observeAsState(emptyList())
+    val character = guildMembers.find { it.name.equals(characterName, ignoreCase = true) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(characterName) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            character?.let { guildMember ->
+                // Character Info Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            val classIcon = when (guildMember.classID) {
+                                1 -> R.drawable.class_warrior
+                                2 -> R.drawable.class_paladin
+                                3 -> R.drawable.class_hunter
+                                4 -> R.drawable.class_rogue
+                                5 -> R.drawable.class_priest
+                                6 -> R.drawable.class_death_knight
+                                7 -> R.drawable.class_shaman
+                                8 -> R.drawable.class_mage
+                                9 -> R.drawable.class_warlock
+                                10 -> R.drawable.class_monk
+                                11 -> R.drawable.class_druid
+                                12 -> R.drawable.class_demonhunter
+                                13 -> R.drawable.class_evoker
+                                else -> R.drawable.class_warrior
+                            }
+                            Icon(
+                                painter = painterResource(id = classIcon),
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = guildMember.name,
+                                    style = MaterialTheme.typography.headlineSmall
+                                )
+                                Text(
+                                    text = "Level ${guildMember.level ?: "Unknown"}",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = "Server: ${guildMember.serverName ?: "Unknown"}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Performance Card
+                ZoneRankingCard(guildMember)
+            } ?: run {
+                Text(
+                    text = "Character information not found",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ZoneRankingCard(member: GuildMember) {
+    val rankings = member.getZoneRankings()
+
+    rankings?.let {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                // Overall Statistics Section
+                Text(
+                    text = "Overall Performance",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Best and Median Performance
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "Best Performance",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "${it.bestPerformanceAverage ?: "0.0"}%",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Median Performance",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "${it.medianPerformanceAverage ?: "0.0"}%",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // All Stars Section
+                it.allStars?.firstOrNull()?.let { allStar ->
+                    Text(
+                        text = "All Stars Ranking",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "Points",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "${allStar.points ?: "0.0"}/${allStar.possiblePoints ?: "0"}",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = "Server Rank",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "#${allStar.serverRank ?: "-"}",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Individual Encounter Rankings
+                Text(
+                    text = "Encounter Rankings",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                it.rankings?.filter { ranking ->
+                    ranking.rankPercent != null &&
+                            ranking.encounter?.name != null &&
+                            (ranking.totalKills?.toIntOrNull() ?: 0) > 0
+                }?.forEach { ranking ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                        Column(Modifier.padding(8.dp)) {
+                            Text(
+                                text = ranking.encounter?.name ?: "Unknown Encounter",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Rank",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = "${ranking.rankPercent ?: "0.0"}%",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "Kills",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = ranking.totalKills ?: "0",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "Best",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = ranking.bestAmount ?: "0.0",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

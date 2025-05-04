@@ -1,5 +1,9 @@
 package com.example.wowHub
 
+import com.example.wowHub.BuildConfig
+import com.example.wowHub.data.remote.api.WarcraftLogsAuthApi
+import com.example.wowHub.ui.navigation.Screen
+
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.example.wowHub.data.local.db.GuildDatabase
 import com.example.wowHub.data.remote.api.WarcraftLogsGraphQLApi
@@ -23,6 +29,7 @@ import com.example.wowHub.viewmodel.GuildRepository
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.wowHub.utils.TokenManager
+import com.example.wowHub.ui.navigation.NavGraph
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -53,7 +60,7 @@ class MainActivity : ComponentActivity() {
             .baseUrl("https://www.warcraftlogs.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(com.example.wowHub.data.remote.api.WarcraftLogsAuthApi::class.java)
+            .create(WarcraftLogsAuthApi::class.java)
 
         val tokenManager = TokenManager(
             authApi = warcraftLogsAuthApi,
@@ -73,6 +80,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WowHubTheme {
+                val navController = rememberNavController()
+                
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -83,12 +92,10 @@ class MainActivity : ComponentActivity() {
                         viewModel.loadGuildMembers(token)
                     }
 
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        WoWAuditRosterScreen(viewModel = viewModel)
-
-                        Spacer(modifier = Modifier.padding(top = 16.dp))
-
-                    }
+                    NavGraph(
+                        navController = navController,
+                        viewModel = viewModel
+                    )
                 }
             }
         }

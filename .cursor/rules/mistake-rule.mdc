@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Make sure all functions are properly imported and that all references are existent when referring to them in order to avoid any errors.

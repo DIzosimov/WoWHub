@@ -6,6 +6,7 @@ import com.example.wowHub.utils.RoleCategory
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,9 +27,11 @@ import com.example.wowHub.R
 import com.example.wowHub.data.local.db.entities.GuildMember
 import com.example.wowHub.data.local.db.entities.WoWAuditMember
 import com.example.wowHub.viewmodel.GuildRepository
+
 @Composable
 fun WoWAuditRosterScreen(
     viewModel: GuildRepository.GuildViewModel,
+    onCharacterClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val roster by viewModel.auditRoster.observeAsState(emptyList())
@@ -52,7 +55,8 @@ fun WoWAuditRosterScreen(
                     RoleCategorySection(
                         category = category,
                         members = membersInCategory,
-                        guildMembers = guildMembers
+                        guildMembers = guildMembers,
+                        onCharacterClick = onCharacterClick
                     )
                 }
             }
@@ -65,7 +69,8 @@ fun WoWAuditRosterScreen(
 private fun RoleCategorySection(
     category: RoleCategory,
     members: List<WoWAuditMember>,
-    guildMembers: List<GuildMember>
+    guildMembers: List<GuildMember>,
+    onCharacterClick: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(true) }
     var counter = 0
@@ -116,10 +121,11 @@ private fun RoleCategorySection(
                         val matchingGuildMember = guildMembers.find {
                             it.name.equals(auditMember.characterName, ignoreCase = true)
                         }
-                        if (matchingGuildMember == null) {
-                            counter += 1
-                        }
-                        MemberCard(auditMember, matchingGuildMember)
+                        MemberCard(
+                            member = auditMember,
+                            guildMember = matchingGuildMember,
+                            onCharacterClick = onCharacterClick
+                        )
                     }
                 }
             }
@@ -131,6 +137,7 @@ private fun RoleCategorySection(
 private fun MemberCard(
     member: WoWAuditMember,
     guildMember: GuildMember?,
+    onCharacterClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val bestAvg = guildMember?.getZoneRankings()?.bestPerformanceAverage
@@ -138,7 +145,8 @@ private fun MemberCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clickable { onCharacterClick(member.characterName) },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
