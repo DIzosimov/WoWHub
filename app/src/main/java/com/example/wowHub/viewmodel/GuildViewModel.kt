@@ -91,13 +91,12 @@ class GuildRepository(
 
             val members = response.mapNotNull { response ->
                 try {
-                    //Log.d("GuildRepository", "Processing member: id=${response.id}, name=${response.name}, class=${response.wowClass}, role=${response.role}, attendance=${response.attendance}, realm=${response.realm}")
                     WoWAuditMember(
                         id = response.id ?: "unknown_${System.currentTimeMillis()}",
                         characterName = response.name ?: "Unknown",
                         characterClass = response.wowClass ?: "Unknown",
                         characterRole = response.role ?: "Unknown",
-                        attendance = response.attendance,
+                        attendance = response.attendance, //Currently unused data point
                         realm = response.realm ?: "Unknown"
                     )
                 } catch (e: Exception) {
@@ -126,6 +125,11 @@ class GuildRepository(
         val guildMembers = mutableListOf<GuildMember>()
 
         for (member in members) {
+            val metric = when (member.characterRole.lowercase()) {
+                "heal" -> "hps"
+                else -> "dps" // For tanks and DPS
+            }
+            
             val query = """
                 {
                   characterData {
@@ -150,13 +154,13 @@ class GuildRepository(
                         }
                       }
                       gameData
-                      zoneRankings(zoneID: 42, metric: dps, difficulty: 5)
+                      zoneRankings(zoneID: 42, metric: $metric, difficulty: 5)
                     }
                   }
                 }
             """.trimIndent()
 
-            Log.e("CharacterSync", "Query for ${member.characterName}:\n$query")
+            //Log.e("CharacterSync", "Query for ${member.characterName}:\n$query")
 
             try {
                 val response = warcraftLogsGraphQLApi.getCharacter(

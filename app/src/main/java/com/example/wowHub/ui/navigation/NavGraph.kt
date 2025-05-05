@@ -1,15 +1,18 @@
 package com.example.wowHub.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wowHub.ui.screens.CharacterScreen
+import com.example.wowHub.ui.screens.HomeScreen
 import com.example.wowHub.ui.screens.WoWAuditRosterScreen
 import com.example.wowHub.viewmodel.GuildRepository
 
 sealed class Screen(val route: String) {
+    object Home : Screen("home")
     object Roster : Screen("roster")
     object Character : Screen("character/{characterName}") {
         fun createRoute(characterName: String) = "character/$characterName"
@@ -19,12 +22,17 @@ sealed class Screen(val route: String) {
 @Composable
 fun NavGraph(
     navController: NavHostController = rememberNavController(),
-    viewModel: GuildRepository.GuildViewModel
+    viewModel: GuildRepository.GuildViewModel,
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Roster.route
+        startDestination = Screen.Home.route,
+        modifier = modifier
     ) {
+        composable(Screen.Home.route) {
+            HomeScreen()
+        }
         composable(Screen.Roster.route) {
             WoWAuditRosterScreen(
                 viewModel = viewModel,

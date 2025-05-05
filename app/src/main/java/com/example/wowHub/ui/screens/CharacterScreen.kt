@@ -1,5 +1,7 @@
 package com.example.wowHub.ui.screens
 
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -62,25 +64,25 @@ fun CharacterScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             val classIcon = when (guildMember.classID) {
-                                1 -> R.drawable.class_warrior
-                                2 -> R.drawable.class_paladin
+                                13 -> R.drawable.class_warrior
+                                6 -> R.drawable.class_paladin
                                 3 -> R.drawable.class_hunter
-                                4 -> R.drawable.class_rogue
-                                5 -> R.drawable.class_priest
-                                6 -> R.drawable.class_death_knight
-                                7 -> R.drawable.class_shaman
-                                8 -> R.drawable.class_mage
-                                9 -> R.drawable.class_warlock
-                                10 -> R.drawable.class_monk
-                                11 -> R.drawable.class_druid
+                                8 -> R.drawable.class_rogue
+                                7 -> R.drawable.class_priest
+                                1 -> R.drawable.class_death_knight
+                                9 -> R.drawable.class_shaman
+                                4 -> R.drawable.class_mage
+                                10 -> R.drawable.class_warlock
+                                5 -> R.drawable.class_monk
+                                2 -> R.drawable.class_druid
                                 12 -> R.drawable.class_demonhunter
-                                13 -> R.drawable.class_evoker
+                                11 -> R.drawable.class_evoker
                                 else -> R.drawable.class_warrior
                             }
-                            Icon(
+                            Image(
                                 painter = painterResource(id = classIcon),
                                 contentDescription = null,
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(32.dp).padding(end = 8.dp)
                             )
                             Column {
                                 Text(

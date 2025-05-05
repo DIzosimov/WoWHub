@@ -39,17 +39,22 @@ fun WoWAuditRosterScreen(
 
     // Group WoWAudit members by role category
     val groupedMembers = remember(roster) {
+        Log.d("RosterScreen", "Total members: ${roster.size}")
+        roster.forEach { member ->
+            Log.d("RosterScreen", "Member: ${member.characterName}, Role: ${member.characterRole}")
+        }
         roster.groupBy { RoleCategories.getRoleCategory(it) }
     }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         RoleCategory.entries.forEach { category ->
             val membersInCategory = groupedMembers[category] ?: emptyList()
+            Log.d("RosterScreen", "Category: $category, Members: ${membersInCategory.size}")
             if (membersInCategory.isNotEmpty()) {
                 item {
                     RoleCategorySection(
@@ -73,10 +78,9 @@ private fun RoleCategorySection(
     onCharacterClick: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(true) }
-    var counter = 0
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
@@ -140,8 +144,22 @@ private fun MemberCard(
     onCharacterClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    @Composable
+    fun getPerformanceColor(percentile: Double?): androidx.compose.ui.graphics.Color {
+        return when {
+            percentile == null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            percentile >= 100.0 -> androidx.compose.ui.graphics.Color(0xFFD2B48C) // Tan
+            percentile >= 99.0 -> androidx.compose.ui.graphics.Color(0xFFFFC0CB) // Pink
+            percentile >= 95.0 -> androidx.compose.ui.graphics.Color(0xFFFFA500) // Orange
+            percentile >= 75.0 -> androidx.compose.ui.graphics.Color(0xFFB266FF) // Lighter Purple
+            percentile >= 50.0 -> androidx.compose.ui.graphics.Color(0xFF4D94FF) // Lighter Blue
+            percentile >= 25.0 -> androidx.compose.ui.graphics.Color(0xFF008000) // Green
+            else -> androidx.compose.ui.graphics.Color(0xFF808080) // Gray
+        }
+    }
+
     val bestAvg = guildMember?.getZoneRankings()?.bestPerformanceAverage
-    val bestAvgText = bestAvg?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "-"
+    val bestAvgText = bestAvg?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "N/A"
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -180,16 +198,17 @@ private fun MemberCard(
                     text = member.characterName,
                     style = MaterialTheme.typography.bodyLarge
                 )
-                Text(
+                /*Text(
                     text = "Attendance: ${member.attendance}%",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
+                )Unused data point
+                */
                 guildMember?.zoneRankingsJson?.let {
                     Text(
-                        text = "Avg: $bestAvgText",
+                        text = "Best Avg: $bestAvgText",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = getPerformanceColor(bestAvg?.toDoubleOrNull())
                     )
                 }
             }
