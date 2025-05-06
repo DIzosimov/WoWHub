@@ -1,7 +1,10 @@
 package com.example.wowHub.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,6 +55,38 @@ fun CharacterScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             character?.let { guildMember ->
+                val classIcon = when (guildMember.classID) {
+                    13 -> R.drawable.class_warrior
+                    6 -> R.drawable.class_paladin
+                    3 -> R.drawable.class_hunter
+                    8 -> R.drawable.class_rogue
+                    7 -> R.drawable.class_priest
+                    1 -> R.drawable.class_death_knight
+                    9 -> R.drawable.class_shaman
+                    4 -> R.drawable.class_mage
+                    10 -> R.drawable.class_warlock
+                    5 -> R.drawable.class_monk
+                    2 -> R.drawable.class_druid
+                    12 -> R.drawable.class_demonhunter
+                    11 -> R.drawable.class_evoker
+                    else -> R.drawable.class_warrior
+                }
+                val youtubeLink = when (guildMember.classID) {
+                    13 -> "https://www.youtube.com/watch?v=U-RboVyZI0Q"
+                    6 -> "https://www.youtube.com/watch?v=STXrxB7ro84"
+                    3 -> "https://www.youtube.com/watch?v=mSGWD08x45A"
+                    8 -> "https://www.youtube.com/watch?v=gHI4tRcugME&t=242s"
+                    7 -> "https://www.youtube.com/watch?v=jbBTELc4yEk"
+                    1 -> "https://www.youtube.com/watch?v=0QbAJVh00U4"
+                    9 -> "https://www.youtube.com/watch?v=ko-BPn6lCRo"
+                    4 -> "https://www.youtube.com/watch?v=mAMX3B80JsA"
+                    10 -> "https://www.youtube.com/watch?v=-R71ssAweIY"
+                    5 -> "https://www.youtube.com/watch?v=hfV33pCnw_Q"
+                    2 -> "https://www.youtube.com/watch?v=iAAWLk9Bw4Y"
+                    12 -> "https://www.youtube.com/watch?v=6sFaY8HLbm0"
+                    11 -> "https://www.youtube.com/watch?v=gEh6M_ldrwU"
+                    else -> "https://www.youtube.com/watch?v=U-RboVyZI0Q"
+                }
                 // Character Info Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -63,22 +100,6 @@ fun CharacterScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            val classIcon = when (guildMember.classID) {
-                                13 -> R.drawable.class_warrior
-                                6 -> R.drawable.class_paladin
-                                3 -> R.drawable.class_hunter
-                                8 -> R.drawable.class_rogue
-                                7 -> R.drawable.class_priest
-                                1 -> R.drawable.class_death_knight
-                                9 -> R.drawable.class_shaman
-                                4 -> R.drawable.class_mage
-                                10 -> R.drawable.class_warlock
-                                5 -> R.drawable.class_monk
-                                2 -> R.drawable.class_druid
-                                12 -> R.drawable.class_demonhunter
-                                11 -> R.drawable.class_evoker
-                                else -> R.drawable.class_warrior
-                            }
                             Image(
                                 painter = painterResource(id = classIcon),
                                 contentDescription = null,
@@ -104,6 +125,8 @@ fun CharacterScreen(
 
                 // Performance Card
                 ZoneRankingCard(guildMember)
+
+                ClassTutorialLinkCard(youtubeLink)
             } ?: run {
                 Text(
                     text = "Character information not found",
@@ -117,6 +140,20 @@ fun CharacterScreen(
 @Composable
 fun ZoneRankingCard(member: GuildMember) {
     val rankings = member.getZoneRankings()
+
+    @Composable
+    fun getPerformanceColor(percentile: Double?): Color {
+        return when {
+            percentile == null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            percentile >= 100.0 -> Color(0xFFD2B48C) // Tan
+            percentile >= 99.0 -> Color(0xFFFFC0CB) // Pink
+            percentile >= 95.0 -> Color(0xFFFFA500) // Orange
+            percentile >= 75.0 -> Color(0xFFB266FF) // Lighter Purple
+            percentile >= 50.0 -> Color(0xFF4D94FF) // Lighter Blue
+            percentile >= 25.0 -> Color(0xFF008000) // Green
+            else -> Color(0xFF808080) // Gray
+        }
+    }
 
     rankings?.let {
         Card(
@@ -140,13 +177,14 @@ fun ZoneRankingCard(member: GuildMember) {
                 ) {
                     Column {
                         Text(
-                            text = "Best Performance",
+                            text = "Best Parse Avg",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                         Text(
                             text = it.bestPerformanceAverage?.toDoubleOrNull()?.let { avg -> String.format("%.2f", avg) } ?: "0.00",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = getPerformanceColor(it.bestPerformanceAverage?.toDoubleOrNull())
                         )
                     }
                     Column {
@@ -157,7 +195,8 @@ fun ZoneRankingCard(member: GuildMember) {
                         )
                         Text(
                             text = it.medianPerformanceAverage?.toDoubleOrNull()?.let { avg -> String.format("%.2f", avg) } ?: "0.00",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = getPerformanceColor(it.medianPerformanceAverage?.toDoubleOrNull())
                         )
                     }
                 }
@@ -184,7 +223,8 @@ fun ZoneRankingCard(member: GuildMember) {
                             )
                             Text(
                                 text = "${allStar.points?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "0.00"}/${allStar.possiblePoints?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "0.00"}",
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = getPerformanceColor(allStar.points?.toDoubleOrNull()?.let { it / (allStar.possiblePoints?.toDoubleOrNull() ?: 1.0) * 100 })
                             )
                         }
                         Column {
@@ -240,7 +280,8 @@ fun ZoneRankingCard(member: GuildMember) {
                                     )
                                     Text(
                                         text = "${ranking.rankPercent?.toDoubleOrNull()?.let { String.format("%.2f", it) } ?: "0.00"}%",
-                                        style = MaterialTheme.typography.bodyLarge
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = getPerformanceColor(ranking.rankPercent?.toDoubleOrNull())
                                     )
                                 }
                                 Column {
@@ -250,18 +291,7 @@ fun ZoneRankingCard(member: GuildMember) {
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
                                     Text(
-                                        text = ranking.totalKills ?: "0",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                                Column {
-                                    Text(
-                                        text = "Best",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                    )
-                                    Text(
-                                        text = ranking.bestAmount?.toDoubleOrNull()?.let { String.format("%,.0f", it) } ?: "0",
+                                        text = "${ranking.totalKills ?: "0"}",
                                         style = MaterialTheme.typography.bodyLarge
                                     )
                                 }
@@ -271,5 +301,27 @@ fun ZoneRankingCard(member: GuildMember) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ClassTutorialLinkCard(link: String) {
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+
+            .clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                context.startActivity(intent)
+            }
+    ) {
+        Text(
+            text = "Watch a YouTube guide for your class",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

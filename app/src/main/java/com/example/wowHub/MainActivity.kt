@@ -9,9 +9,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -30,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -39,8 +36,6 @@ import androidx.room.Room
 import com.example.wowHub.data.local.db.GuildDatabase
 import com.example.wowHub.data.remote.api.WarcraftLogsGraphQLApi
 import com.example.wowHub.data.remote.api.WoWAuditApi
-import com.example.wowHub.ui.screens.HomeScreen
-import com.example.wowHub.ui.screens.WoWAuditRosterScreen
 import com.example.wowHub.ui.theme.WowHubTheme
 import com.example.wowHub.viewmodel.GuildRepository
 import retrofit2.Retrofit
