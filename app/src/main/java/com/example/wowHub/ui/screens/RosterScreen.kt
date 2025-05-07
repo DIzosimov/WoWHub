@@ -49,7 +49,7 @@ fun WoWAuditRosterScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         RoleCategory.entries.forEach { category ->
@@ -80,9 +80,9 @@ private fun RoleCategorySection(
     var expanded by remember { mutableStateOf(true) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp),
     ) {
         Column {
             // Section Header

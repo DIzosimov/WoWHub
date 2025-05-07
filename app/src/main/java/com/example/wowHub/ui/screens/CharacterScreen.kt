@@ -3,7 +3,10 @@ package com.example.wowHub.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.wowHub.R
 import com.example.wowHub.data.local.db.entities.GuildMember
 import com.example.wowHub.viewmodel.GuildRepository
@@ -87,6 +91,22 @@ fun CharacterScreen(
                     11 -> "https://www.youtube.com/watch?v=gEh6M_ldrwU"
                     else -> "https://www.youtube.com/watch?v=U-RboVyZI0Q"
                 }
+                val className = when (guildMember.classID) {
+                    13 -> "warrior"
+                    6 -> "paladin"
+                    3 -> "hunter"
+                    8 -> "rogue"
+                    7 -> "priest"
+                    1 -> "death knight"
+                    9 -> "shaman"
+                    4 -> "mage"
+                    10 -> "warlock"
+                    5 -> "monk"
+                    2 -> "druid"
+                    12 -> "demonhunter"
+                    11 -> "evoker"
+                    else -> "unknown"
+                }
                 // Character Info Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -127,6 +147,8 @@ fun CharacterScreen(
                 ZoneRankingCard(guildMember)
 
                 ClassTutorialLinkCard(youtubeLink)
+
+                WebBrowserWindow(className)
             } ?: run {
                 Text(
                     text = "Character information not found",
@@ -311,7 +333,6 @@ fun ClassTutorialLinkCard(link: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-
             .clickable {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
                 context.startActivity(intent)
@@ -323,5 +344,113 @@ fun ClassTutorialLinkCard(link: String) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(16.dp)
         )
+    }
+}
+
+@Composable
+fun WebBrowserWindow(className: String) {
+    var currentUrl by remember { mutableStateOf<String?>(null) }
+
+    @Composable
+    fun getClassGuides(className: String): List<Pair<String, String>> {
+        return when (className.lowercase()) {
+            "warrior" -> listOf(
+                "Arms" to "https://www.wowhead.com/guide/classes/warrior/arms/overview-pve-dps",
+                "Fury" to "https://www.wowhead.com/guide/classes/warrior/fury/overview-pve-dps",
+                "Protection" to "https://www.wowhead.com/guide/classes/warrior/protection/overview-pve-tank"
+            )
+            "paladin" -> listOf(
+                "Holy" to "https://www.wowhead.com/guide/classes/paladin/holy/overview-pve-healer",
+                "Protection" to "https://www.wowhead.com/guide/classes/paladin/protection/overview-pve-tank",
+                "Retribution" to "https://www.wowhead.com/guide/classes/paladin/retribution/overview-pve-dps"
+            )
+            "hunter" -> listOf(
+                "Beast Mastery" to "https://www.wowhead.com/guide/classes/hunter/beast-mastery/overview-pve-dps",
+                "Marksmanship" to "https://www.wowhead.com/guide/classes/hunter/marksmanship/overview-pve-dps",
+                "Survival" to "https://www.wowhead.com/guide/classes/hunter/survival/overview-pve-dps"
+            )
+            "rogue" -> listOf(
+                "Assassination" to "https://www.wowhead.com/guide/classes/rogue/assassination/overview-pve-dps",
+                "Outlaw" to "https://www.wowhead.com/guide/classes/rogue/outlaw/overview-pve-dps",
+                "Subtlety" to "https://www.wowhead.com/guide/classes/rogue/subtlety/overview-pve-dps"
+            )
+            "priest" -> listOf(
+                "Discipline" to "https://www.wowhead.com/guide/classes/priest/discipline/overview-pve-healer",
+                "Holy" to "https://www.wowhead.com/guide/classes/priest/holy/overview-pve-healer",
+                "Shadow" to "https://www.wowhead.com/guide/classes/priest/shadow/overview-pve-dps"
+            )
+            "death knight" -> listOf(
+                "Blood" to "https://www.wowhead.com/guide/classes/death-knight/blood/overview-pve-tank",
+                "Frost" to "https://www.wowhead.com/guide/classes/death-knight/frost/overview-pve-dps",
+                "Unholy" to "https://www.wowhead.com/guide/classes/death-knight/unholy/overview-pve-dps"
+            )
+            "shaman" -> listOf(
+                "Elemental" to "https://www.wowhead.com/guide/classes/shaman/elemental/overview-pve-dps",
+                "Enhancement" to "https://www.wowhead.com/guide/classes/shaman/enhancement/overview-pve-dps",
+                "Restoration" to "https://www.wowhead.com/guide/classes/shaman/restoration/overview-pve-healer"
+            )
+            "mage" -> listOf(
+                "Arcane" to "https://www.wowhead.com/guide/classes/mage/arcane/overview-pve-dps",
+                "Fire" to "https://www.wowhead.com/guide/classes/mage/fire/overview-pve-dps",
+                "Frost" to "https://www.wowhead.com/guide/classes/mage/frost/overview-pve-dps"
+            )
+            "warlock" -> listOf(
+                "Affliction" to "https://www.wowhead.com/guide/classes/warlock/affliction/overview-pve-dps",
+                "Demonology" to "https://www.wowhead.com/guide/classes/warlock/demonology/overview-pve-dps",
+                "Destruction" to "https://www.wowhead.com/guide/classes/warlock/destruction/overview-pve-dps"
+            )
+            "monk" -> listOf(
+                "Brewmaster" to "https://www.wowhead.com/guide/classes/monk/brewmaster/overview-pve-tank",
+                "Mistweaver" to "https://www.wowhead.com/guide/classes/monk/mistweaver/overview-pve-healer",
+                "Windwalker" to "https://www.wowhead.com/guide/classes/monk/windwalker/overview-pve-dps"
+            )
+            "druid" -> listOf(
+                "Balance" to "https://www.wowhead.com/guide/classes/druid/balance/overview-pve-dps",
+                "Feral" to "https://www.wowhead.com/guide/classes/druid/feral/overview-pve-dps",
+                "Guardian" to "https://www.wowhead.com/guide/classes/druid/guardian/overview-pve-tank",
+                "Restoration" to "https://www.wowhead.com/guide/classes/druid/restoration/overview-pve-healer"
+            )
+            "demonhunter" -> listOf(
+                "Havoc" to "https://www.wowhead.com/guide/classes/demon-hunter/havoc/overview-pve-dps",
+                "Vengeance" to "https://www.wowhead.com/guide/classes/demon-hunter/vengeance/overview-pve-tank"
+            )
+            "evoker" -> listOf(
+                "Devastation" to "https://www.wowhead.com/guide/classes/evoker/devastation/overview-pve-dps",
+                "Preservation" to "https://www.wowhead.com/guide/classes/evoker/preservation/overview-pve-healer",
+                "Augmentation" to "https://www.wowhead.com/guide/classes/evoker/augmentation/overview-pve-dps"
+            )
+            else -> emptyList()
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Knapprad
+        Row(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            getClassGuides(className).forEach { (title, url) ->
+                Button(
+                    onClick = { currentUrl = url },
+                    modifier = Modifier.padding(4.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 7f)
+                    )
+                ) {
+                    Text(text = title)
+                }
+            }
+        }
+
+        // WebViewsektion
+        currentUrl?.let { url ->
+            val context = LocalContext.current
+            val webView = remember {
+                WebView(context).apply {
+                    settings.javaScriptEnabled = true
+                    webViewClient = WebViewClient()
+                }
+            }
+
+            AndroidView(factory = { webView }, update = { it.loadUrl(url) })
+        }
     }
 }

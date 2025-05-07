@@ -32,10 +32,15 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Fill
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.material3.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
 
 
 
@@ -50,6 +55,7 @@ fun HomeScreen() {
     val itemSpacing = 150.dp
     val scrollSpeed = 30f // px per drag event
     val headerHeightPx = 180f
+    var videoItemY by remember { mutableStateOf(0f) }
 
     // Initialize with some items
     LaunchedEffect(Unit) {
@@ -210,6 +216,23 @@ fun HomeScreen() {
                 )
             }
 
+           item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .onGloballyPositioned { coordinates ->
+                        videoItemY = coordinates.positionInRoot().y
+                    }
+            ) {
+                // Only show the video if the item is visible in the viewport
+                NativeYouTubePlayer(
+                    videoId = "sy74BxaYnyA",
+                    startSeconds = 51f
+                )
+            }
+        }
+
 
 
             // Infinite items (example)
@@ -288,24 +311,45 @@ fun FadingTextItem(
 }
 
 @Composable
-fun UninteractableYouTubePlayer(
-    videoId: String,
-    startSeconds: Int,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    val url = "https://www.youtube.com/embed/$videoId?start=$startSeconds&autoplay=1&controls=0&modestbranding=1&rel=0"
-
+fun NativeYouTubePlayer(videoId: String, startSeconds: Float) {
+    var isPlayerReady by remember { mutableStateOf(false) }
+    var shouldPlay by remember { mutableStateOf(false) }
+    var player by remember { mutableStateOf<YouTubePlayer?>(null) }
+    
     AndroidView(
-        factory = {
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                webViewClient = WebViewClient()
-                // Disable user interaction
-                setOnTouchListener { _, _ -> true }
-                loadUrl(url)
+        factory = { context ->
+            YouTubePlayerView(context).apply {
+                // Configure the player
+                enableAutomaticInitialization = true
+                addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
+                    override fun onReady(youTubePlayer: YouTubePlayer) {
+                        isPlayerReady = true
+                        player = youTubePlayer
+                        // Load and play the video immediately
+                        youTubePlayer.loadVideo(videoId, startSeconds)
+                    }
+                })
+                
+                // Make the player uninteractable
+                isClickable = false
+                isFocusable = false
+                isFocusableInTouchMode = false
+
             }
         },
-        modifier = modifier
+        update = {
+            // When the player is ready and should play, ensure it's playing
+            if (isPlayerReady && shouldPlay) {
+                player?.play()
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp)
     )
+    
+    // Update shouldPlay based on visibility
+    LaunchedEffect(Unit) {
+        shouldPlay = true
+    }
 }
