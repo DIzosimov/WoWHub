@@ -8,44 +8,51 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Vibrator
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.*
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
 import java.net.InetSocketAddress
 import java.net.Socket
-
-data class Storage(
-    val text: String? = null
-) : Serializable
-
-sealed class ChatItem
-data class ChatText(val text: String) : ChatItem()
 
 @Composable
 fun ChatScreen() {
     val context = LocalContext.current
     var message by remember { mutableStateOf("") }
-    var messages by remember { mutableStateOf<List<ChatItem>>(emptyList()) }
+    var messages by remember { mutableStateOf<List<String>>(emptyList()) }
+    var lastSentMessage by remember { mutableStateOf<String?>(null) }
     var connected by remember { mutableStateOf(false) }
     val socketState = remember { mutableStateOf<Socket?>(null) }
-    val outputState = remember { mutableStateOf<ObjectOutputStream?>(null) }
-    val inputState = remember { mutableStateOf<ObjectInputStream?>(null) }
+    val writerState = remember { mutableStateOf<PrintWriter?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
+    // Check permissions when the screen is first composed
     LaunchedEffect(Unit) {
         createNotificationChannel(context)
         checkNotificationPermission(context)
@@ -56,33 +63,30 @@ fun ChatScreen() {
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 val s = Socket()
-                s.connect(InetSocketAddress("atlas.dsv.su.se", 4848), 5000)
+                s.connect(InetSocketAddress("atlas.dsv.su.se", 9494), 5000)
+                val writer = PrintWriter(s.getOutputStream(), true)
+                val reader = BufferedReader(InputStreamReader(s.getInputStream()))
+
                 socketState.value = s
-
-                val output = ObjectOutputStream(s.getOutputStream())
-                output.flush()
-                outputState.value = output
-
-                // send dummy message to avoid deadlock
-                output.writeObject(Storage(text = "CONNECTED"))
-                output.flush()
-                output.reset()
-
-                val input = ObjectInputStream(s.getInputStream())
-                inputState.value = input
+                writerState.value = writer
 
                 withContext(Dispatchers.Main) {
                     connected = true
                 }
 
                 while (s.isConnected) {
-                    val obj = input.readObject() as? Storage ?: continue
+                    val line = reader.readLine() ?: break
                     val vibrator = getVibrator(context)
                     withContext(Dispatchers.Main) {
-                        obj.text?.let { messages = messages + ChatText(it) }
+                        messages = messages + line
+                        if (line != lastSentMessage) { //Kollar om det är ens eget meddelande
+                            Toast.makeText(context, "New Message: $line", Toast.LENGTH_SHORT).show()
+                            sendNotification(context,"New Message", line)
+                        }
                         vibrator.vibrate(500)
                     }
                 }
+
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     connected = false
@@ -94,13 +98,11 @@ fun ChatScreen() {
     fun disconnectFromServer() {
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                outputState.value?.close()
-                inputState.value?.close()
+                writerState.value?.close()
                 socketState.value?.close()
             } catch (_: Exception) {}
             withContext(Dispatchers.Main) {
-                outputState.value = null
-                inputState.value = null
+                writerState.value = null
                 socketState.value = null
                 connected = false
                 Toast.makeText(context, "Disconnected", Toast.LENGTH_SHORT).show()
@@ -109,10 +111,15 @@ fun ChatScreen() {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
+        // Connection status and controls
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -121,34 +128,61 @@ fun ChatScreen() {
                 style = MaterialTheme.typography.titleMedium,
                 color = if (connected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             )
-            Row {
-                Button(onClick = { connectToServer() }, enabled = !connected) { Text("Connect") }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = { disconnectFromServer() }, enabled = connected) { Text("Disconnect") }
-            }
-        }
 
-        LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 8.dp)
-        ) {
-            items(messages) { msg ->
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    when (msg) {
-                        is ChatText -> Text(msg.text, Modifier.padding(8.dp))
-                    }
+            Row {
+                Button(
+                    onClick = { connectToServer() },
+                    enabled = !connected
+                ) {
+                    Text("Connect")
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = { disconnectFromServer() },
+                    enabled = connected
+                ) {
+                    Text("Disconnect")
                 }
             }
         }
 
+        // Chat messages
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            items(messages) { msg ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    Text(
+                        text = msg,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+        }
+
+        // Message input and controls
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
                 value = message,
                 onValueChange = { message = it },
                 label = { Text("Enter message") },
-                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
                 enabled = connected
             )
 
@@ -156,9 +190,8 @@ fun ChatScreen() {
                 onClick = {
                     if (connected && message.isNotBlank()) {
                         coroutineScope.launch(Dispatchers.IO) {
-                            outputState.value?.writeObject(Storage(text = message))
-                            outputState.value?.flush()
-                            outputState.value?.reset()
+                            lastSentMessage = message
+                            writerState.value?.println(message)
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, "Message Sent!", Toast.LENGTH_SHORT).show()
                                 message = ""
@@ -167,7 +200,9 @@ fun ChatScreen() {
                     }
                 },
                 enabled = connected && message.isNotBlank()
-            ) { Text("Send") }
+            ) {
+                Text("Send")
+            }
         }
     }
 }
@@ -222,6 +257,7 @@ private fun sendNotification(context: Context, title: String, message: String) {
     }
 }
 
-fun getVibrator(context: Context): Vibrator {
+fun getVibrator(context: Context): Vibrator { //Hämtar vibration managern från systemet
     return context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 }
+
