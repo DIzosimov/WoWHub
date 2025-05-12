@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wowHub.ui.screens.CharacterScreen
+import com.example.wowHub.ui.screens.ChatScreen
 import com.example.wowHub.ui.screens.HomeScreen
 import com.example.wowHub.ui.screens.WoWAuditRosterScreen
 import com.example.wowHub.viewmodel.GuildRepository
@@ -14,6 +15,7 @@ import com.example.wowHub.viewmodel.GuildRepository
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Roster : Screen("roster")
+    object Chat : Screen("chat")
     object Character : Screen("character/{characterName}") {
         fun createRoute(characterName: String) = "character/$characterName"
     }
@@ -40,6 +42,9 @@ fun NavGraph(
                     navController.navigate(Screen.Character.createRoute(characterName))
                 }
             )
+        }
+        composable(Screen.Chat.route) {
+            ChatScreen()
         }
         composable(Screen.Character.route) { backStackEntry ->
             val characterName = backStackEntry.arguments?.getString("characterName") ?: return@composable

@@ -135,6 +135,19 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             )
+                            NavigationDrawerItem(
+                                label = { Text("Chat") },
+                                selected = navController.currentDestination?.route == Screen.Chat.route,
+                                onClick = {
+                                    scope.launch {
+                                        drawerState.close()
+                                        navController.navigate(Screen.Chat.route) {
+                                            popUpTo(navController.graph.startDestinationId)
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }
+                            )
                         }
                     }
                 ) {
