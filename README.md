@@ -4,6 +4,12 @@
 
 WoWHub is a finished Android app. It is a Gradle project with a single `app` module (source under `app/src/main/java/com/example/wowHub`, resources under `app/src/main/res`) and both unit and instrumented test folders.
 
+## What it does
+
+WoWHub is an Android companion app for World of Warcraft guilds. It has four
+screens — chat, events, logs and roster — for keeping a guild's conversation,
+schedule, activity history and member list in one place.
+
 ## Role
 
 Creator and developer.
