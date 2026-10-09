@@ -2,7 +2,7 @@
 
 ## Summary
 
-WoWHub is a finished Android app. It is a Gradle project with a single `app` module (source under `app/src/main/java/com/example/wowHub`, resources under `app/src/main/res`) and both unit and instrumented test folders.
+WoWHub is a Guild Management Application for World of Warcraft — a finished Android app. It is a Gradle project with a single `app` module (source under `app/src/main/java/com/example/wowHub`, resources under `app/src/main/res`) and both unit and instrumented test folders.
 
 ## What it does
 
